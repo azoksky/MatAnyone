@@ -695,7 +695,6 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                 outputs = [template_frame,click_state],
             )
 
-            # set example
    
 
         with gr.TabItem("Image"):
