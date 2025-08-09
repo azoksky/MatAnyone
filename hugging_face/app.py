@@ -696,12 +696,7 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
             )
 
             # set example
-            gr.Markdown("---")
-            gr.Markdown("## Examples")
-            gr.Examples(
-                examples=[os.path.join(os.path.dirname(__file__), "./test_sample/", test_sample) for test_sample in ["test-sample0-720p.mp4", "test-sample1-720p.mp4", "test-sample2-720p.mp4", "test-sample3-720p.mp4"]],
-                inputs=[video_input],
-            )
+   
 
         with gr.TabItem("Image"):
             click_state = gr.State([[],[]])
