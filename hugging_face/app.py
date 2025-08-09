@@ -494,7 +494,6 @@ small {
 
 with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
     gr.HTML('''
-        <div class="title-container">
             <h1 class="title is-2 publication-title"
                 style="font-size:50px; font-family: 'Sarpanch', serif; 
                     background: linear-gradient(to right, #d231d8, #2dc464); 
@@ -502,7 +501,6 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                     -webkit-text-fill-color: transparent;">
                 MatAnyone
             </h1>
-        </div>
     ''')
 
 
