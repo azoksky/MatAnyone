@@ -505,19 +505,6 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
         </div>
     ''')
 
-    gr.Markdown(description)
-
-    with gr.Group(elem_classes="gr-monochrome-group", visible=True):
-        with gr.Row():
-            with gr.Accordion("📕 Video Tutorial (click to expand)", open=False, elem_classes="custom-bg"):
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("### Case 1: Single Target")
-                        gr.Video(value="./assets/tutorial_single_target.mp4", elem_classes="video")
-
-                    with gr.Column():
-                        gr.Markdown("### Case 2: Multiple Targets")
-                        gr.Video(value="./assets/tutorial_multi_targets.mp4", elem_classes="video")
 
     with gr.Tabs():
         with gr.TabItem("Video"):
@@ -905,16 +892,6 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                 inputs = [image_state, click_state,],
                 outputs = [template_frame,click_state],
             )
-
-            # set example
-            gr.Markdown("---")
-            gr.Markdown("## Examples")
-            gr.Examples(
-                examples=[os.path.join(os.path.dirname(__file__), "./test_sample/", test_sample) for test_sample in ["test-sample0.jpg", "test-sample1.jpg"]],
-                inputs=[image_input],
-            )
-
-    gr.Markdown(article)
 
 demo.queue()
 demo.launch(debug=True)
