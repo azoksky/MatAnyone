@@ -35,7 +35,7 @@ def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10):
     """
 
     # print(f'===== [r_erode] {r_erode}; [r_dilate] {r_dilate} =====')
-    bgr = (np.array([120, 255, 155], dtype=np.float32)/255).reshape((1, 1, 3))
+    bgr = (np.array([127, 127, 127], dtype=np.float32)/255).reshape((1, 1, 3))
     objects = [1]
 
     # [optional] erode & dilate on given seg mask
@@ -71,6 +71,6 @@ def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10):
         # DONOT save the warmup frames
         if ti > (n_warmup-1):
             frames.append((com_np*255).astype(np.uint8))
-            phas.append((pha*255).astype(np.uint8))
+            phas.append(((1 - pha) * 255).astype(np.uint8))
     
     return frames, phas
