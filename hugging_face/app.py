@@ -423,63 +423,6 @@ ckpt_path = load_file_from_url(pretrain_model_url, checkpoint_folder)
 matanyone_model = get_matanyone_model(ckpt_path, args.device)
 matanyone_model = matanyone_model.to(args.device).eval()
 # matanyone_processor = InferenceCore(matanyone_model, cfg=matanyone_model.cfg)
-
-# download test samples
-test_sample_path = os.path.join('.', "test_sample/")
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample0-720p.mp4', test_sample_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample1-720p.mp4', test_sample_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample2-720p.mp4', test_sample_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample3-720p.mp4', test_sample_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample0.jpg', test_sample_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/test-sample1.jpg', test_sample_path)
-
-# download assets
-assets_path = os.path.join('.', "assets/")
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/tutorial_single_target.mp4', assets_path)
-load_file_from_url('https://github.com/pq-yang/MatAnyone/releases/download/media/tutorial_multi_targets.mp4', assets_path)
-
-# documents
-title = r"""<div class="multi-layer" align="center"><span>MatAnyone</span></div>
-"""
-description = r"""
-<b>Official Gradio demo</b> for <a href='https://github.com/pq-yang/MatAnyone' target='_blank'><b>MatAnyone: Stable Video Matting with Consistent Memory Propagation</b></a>.<br>
-🔥 MatAnyone is a practical human video matting framework supporting target assignment 🎯.<br>
-🎪 Try to drop your video/image, assign the target masks with a few clicks, and get the the matting results 🤡!<br>
-
-*Note: Due to the online GPU memory constraints, any input with too big resolution will be resized to 1080p.<br>*
-🚀 <b> If you encounter any issue (e.g., frozen video output) or wish to run on higher resolution inputs, please consider <u>duplicating this space</u> or 
-<u>launching the <a href='https://github.com/pq-yang/MatAnyone?tab=readme-ov-file#-interactive-demo' target='_blank'>demo</a> locally</u> following the GitHub instructions.</b>
-"""
-article = r"""<h3>
-<b>If MatAnyone is helpful, please help to 🌟 the <a href='https://github.com/pq-yang/MatAnyone' target='_blank'>Github Repo</a>. Thanks!</b></h3>
-
----
-
-📑 **Citation**
-<br>
-If our work is useful for your research, please consider citing:
-```bibtex
-@InProceedings{yang2025matanyone,
-     title     = {{MatAnyone}: Stable Video Matting with Consistent Memory Propagation},
-     author    = {Yang, Peiqing and Zhou, Shangchen and Zhao, Jixin and Tao, Qingyi and Loy, Chen Change},
-     booktitle = {arXiv preprint arXiv:2501.14677},
-     year      = {2025}
-}
-```
-📝 **License**
-<br>
-This project is licensed under <a rel="license" href="https://github.com/pq-yang/MatAnyone/blob/main/LICENSE">S-Lab License 1.0</a>. 
-Redistribution and use for non-commercial purposes should follow this license.
-<br>
-📧 **Contact**
-<br>
-If you have any questions, please feel free to reach me out at <b>peiqingyang99@outlook.com</b>.
-<br>
-👏 **Acknowledgement**
-<br>
-This project is built upon [Cutie](https://github.com/hkchengrex/Cutie), with the interactive demo adapted from [ProPainter](https://github.com/sczhou/ProPainter), leveraging segmentation capabilities from [Segment Anything](https://github.com/facebookresearch/segment-anything). Thanks for their awesome works!
-"""
-
 my_custom_css = """
 .gradio-container {width: 85% !important; margin: 0 auto;}
 .gr-monochrome-group {border-radius: 5px !important; border: revert-layer !important; border-width: 2px !important; color: black !important}
