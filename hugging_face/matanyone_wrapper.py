@@ -24,7 +24,7 @@ def gen_erosion(alpha, min_kernel_size, max_kernel_size):
 
 @torch.inference_mode()
 @safe_autocast_decorator()
-def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10):
+def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10, hard_mask=False):
     """
     Args:
         frames_np: [(H,W,C)]*n, uint8
@@ -65,6 +65,8 @@ def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10):
         # convert output probabilities to an object mask
         mask = processor.output_prob_to_mask(output_prob)
 
+        if hard_mask:
+             mask = (mask >= 0.5).to(mask.dtype)
         pha = mask.unsqueeze(2).detach().to("cpu").numpy()
         com_np = frame_single / 255. * pha + bgr * (1 - pha)
         
