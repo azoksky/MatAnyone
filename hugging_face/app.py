@@ -784,13 +784,14 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                                                     info="Dilation on the added mask",
                                                     interactive=True)
                             
-                         with gr.Row():
+                        with gr.Row():
                             background_color_dropdown = gr.Dropdown(label="Background Color",choices=["Pure white", "Grey (127,127,127)", "Green screen"],value="Grey (127,127,127)",interactive=True)
                             invert_alpha_checkbox = gr.Checkbox(label="Invert Alpha Mask",value=False,info="Output alpha as background=white (inverted).",interactive=True)
 
                         with gr.Row():
                             image_selection_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Num of Refinement Iterations", info="More iterations → More details & More time", visible=False)
                             track_pause_number_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Track end frame", visible=False)
+                        
                         with gr.Row():
                             point_prompt = gr.Radio(
                                 choices=["Positive", "Negative"],
