@@ -24,18 +24,30 @@ def gen_erosion(alpha, min_kernel_size, max_kernel_size):
 
 @torch.inference_mode()
 @safe_autocast_decorator()
-def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10, hard_mask=False):
+def matanyone(
+    processor, 
+    frames_np, 
+    mask, 
+    r_erode=0, 
+    r_dilate=0, 
+    n_warmup=10, 
+    hard_mask=False,
+    background_color=(127, 127, 127),
+    invert_alpha=False
+):
     """
     Args:
         frames_np: [(H,W,C)]*n, uint8
         mask: (H,W), uint8
+        background_color: (R,G,B) in 0-255
+        invert_alpha: bool
     Outputs:
         com: [(H,W,C)]*n, uint8
         pha: [(H,W,C)]*n, uint8
     """
 
-    # print(f'===== [r_erode] {r_erode}; [r_dilate] {r_dilate} =====')
-    bgr = (np.array([127, 127, 127], dtype=np.float32)/255).reshape((1, 1, 3))
+    # Background color
+    bgr = (np.array(background_color, dtype=np.float32) / 255.0).reshape((1, 1, 3))
     objects = [1]
 
     # [optional] erode & dilate on given seg mask
@@ -46,7 +58,7 @@ def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10, ha
 
     mask = torch.from_numpy(mask).to(device)
 
-    frames_np = [frames_np[0]]* n_warmup + frames_np
+    frames_np = [frames_np[0]] * n_warmup + frames_np
 
     frames = []
     phas = []
@@ -54,25 +66,29 @@ def matanyone(processor, frames_np, mask, r_erode=0, r_dilate=0, n_warmup=10, ha
         image = to_tensor(frame_single).float().to(device)
 
         if ti == 0:
-            output_prob = processor.step(image, mask, objects=objects)      # encode given mask
-            output_prob = processor.step(image, first_frame_pred=True)      # clear past memory for warmup frames
+            _ = processor.step(image, mask, objects=objects)      # encode given mask
+            _ = processor.step(image, first_frame_pred=True)      # clear past memory for warmup frames
         else:
             if ti <= n_warmup:
-                output_prob = processor.step(image, first_frame_pred=True)  # clear past memory for warmup frames
+                _ = processor.step(image, first_frame_pred=True)  # clear past memory for warmup frames
             else:
-                output_prob = processor.step(image)
+                _ = processor.step(image)
 
         # convert output probabilities to an object mask
-        mask = processor.output_prob_to_mask(output_prob)
+        mask = processor.output_prob_to_mask(_)
 
         if hard_mask:
-             mask = (mask >= 0.5).to(mask.dtype)
-        pha = mask.unsqueeze(2).detach().to("cpu").numpy()
-        com_np = frame_single / 255. * pha + bgr * (1 - pha)
+            mask = (mask >= 0.5).to(mask.dtype)
+
+        pha = mask.unsqueeze(2).detach().to("cpu").numpy()  # (H, W, 1), float in [0,1]
+        com_np = frame_single / 255.0 * pha + bgr * (1.0 - pha)
+
+        # Alpha output (invert if requested)
+        pha_out = (1.0 - pha) if invert_alpha else pha
         
         # DONOT save the warmup frames
-        if ti > (n_warmup-1):
-            frames.append((com_np*255).astype(np.uint8))
-            phas.append(((1 - pha) * 255).astype(np.uint8))
+        if ti > (n_warmup - 1):
+            frames.append((com_np * 255).astype(np.uint8))
+            phas.append((pha_out * 255).astype(np.uint8))
     
     return frames, phas
