@@ -399,9 +399,10 @@ def generate_video_from_frames(frames, output_path, fps=30, gray2rgb=False, audi
     video_temp_path = output_path.replace(".mp4", "_temp.mp4")
     
     # resize back to ensure input resolution
-    imageio.mimwrite(video_temp_path, frames, fps=fps, quality=7, 
-                     codec='libx264', ffmpeg_params=["-vf", f"scale={w}:{h}"])
-    
+    # imageio.mimwrite(video_temp_path, frames, fps=fps, quality=7, 
+    #                  codec='libx264', ffmpeg_params=["-vf", f"scale={w}:{h}"])
+    imageio.mimwrite(video_temp_path, frames, fps=fps, codec='libx264', ffmpeg_params=['-preset', 'veryslow','-pix_fmt', 'yuv444p','-crf', '1', '-vf', f'scale={w}:{h}'])
+
     # add audio to video if audio path exists
     if audio_path != "" and os.path.exists(audio_path):
         output_path = add_audio_to_video(video_temp_path, audio_path, output_path)    
