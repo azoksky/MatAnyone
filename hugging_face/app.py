@@ -270,7 +270,7 @@ def show_mask(video_state, interactive_state, mask_dropdown):
         return select_frame
 
 # image matting
-def image_matting(video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, refine_iter):
+def image_matting(video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, refine_iter, background_color_choice, invert_alpha):
     matanyone_processor = InferenceCore(matanyone_model, cfg=matanyone_model.cfg)
     if interactive_state["track_end_number"]:
         following_frames = video_state["origin_images"][video_state["select_frame_number"]:interactive_state["track_end_number"]]
@@ -292,14 +292,27 @@ def image_matting(video_state, interactive_state, mask_dropdown, erode_kernel_si
     # operation error
     if len(np.unique(template_mask))==1:
         template_mask[0][0]=1
-    foreground, alpha = matanyone(matanyone_processor, following_frames, template_mask*255, r_erode=erode_kernel_size, r_dilate=dilate_kernel_size, n_warmup=refine_iter, hard_mask=args.hard_mask)
+
+    bg_tuple = parse_background_choice(background_color_choice)
+
+    foreground, alpha = matanyone(
+        matanyone_processor, 
+        following_frames, 
+        template_mask*255, 
+        r_erode=erode_kernel_size, 
+        r_dilate=dilate_kernel_size, 
+        n_warmup=refine_iter,
+        hard_mask=args.hard_mask,
+        background_color=bg_tuple,
+        invert_alpha=invert_alpha
+    )
     foreground_output = Image.fromarray(foreground[-1])
     alpha_output = Image.fromarray(alpha[-1][:,:,0])
 
     return foreground_output, alpha_output
 
 # video matting
-def video_matting(video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size):
+def video_matting(video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, background_color_choice, invert_alpha):
     matanyone_processor = InferenceCore(matanyone_model, cfg=matanyone_model.cfg)
     if interactive_state["track_end_number"]:
         following_frames = video_state["origin_images"][video_state["select_frame_number"]:interactive_state["track_end_number"]]
@@ -318,16 +331,27 @@ def video_matting(video_state, interactive_state, mask_dropdown, erode_kernel_si
     else:      
         template_mask = video_state["masks"][video_state["select_frame_number"]]
     fps = video_state["fps"]
-
     audio_path = video_state["audio"]
 
     # operation error
     if len(np.unique(template_mask))==1:
         template_mask[0][0]=1
-    foreground, alpha = matanyone(matanyone_processor, following_frames, template_mask*255, r_erode=erode_kernel_size, r_dilate=dilate_kernel_size, hard_mask=args.hard_mask)
 
-    foreground_output = generate_video_from_frames(foreground, output_path="./results/{}_fg.mp4".format(video_state["video_name"]), fps=fps, audio_path=audio_path) # import video_input to name the output video
-    alpha_output = generate_video_from_frames(alpha, output_path="./results/{}_alpha.mp4".format(video_state["video_name"]), fps=fps, gray2rgb=True, audio_path=audio_path) # import video_input to name the output video
+    bg_tuple = parse_background_choice(background_color_choice)
+
+    foreground, alpha = matanyone(
+        matanyone_processor, 
+        following_frames, 
+        template_mask*255, 
+        r_erode=erode_kernel_size, 
+        r_dilate=dilate_kernel_size, 
+        hard_mask=args.hard_mask,
+        background_color=bg_tuple,
+        invert_alpha=invert_alpha
+    )
+
+    foreground_output = generate_video_from_frames(foreground, output_path="./results/{}_fg.mp4".format(video_state["video_name"]), fps=fps, audio_path=audio_path) 
+    alpha_output = generate_video_from_frames(alpha, output_path="./results/{}_alpha.mp4".format(video_state["video_name"]), fps=fps, gray2rgb=True, audio_path=audio_path) 
     
     return foreground_output, alpha_output
 
@@ -346,7 +370,15 @@ def add_audio_to_video(video_path, audio_path, output_path):
     except ffmpeg.Error as e:
         print(f"FFmpeg error:\n{e.stderr.decode()}")
         return None
-
+     
+def parse_background_choice(choice: str):
+    choice = (choice or "").lower()
+    if "white" in choice:
+        return (255, 255, 255)
+    if "green" in choice:
+        return (0, 255, 0)
+    # default: grey
+    return (127, 127, 127)
 
 def generate_video_from_frames(frames, output_path, fps=30, gray2rgb=False, audio_path=""):
     """
@@ -556,7 +588,11 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                                                     value=10,
                                                     info="Dilation on the added mask",
                                                     interactive=True)
+                         
 
+                        with gr.Row():
+                         background_color_dropdown = gr.Dropdown(label="Background Color",choices=["Pure white", "Grey (127,127,127)", "Green screen"],value="Grey (127,127,127)",interactive=True)
+                         invert_alpha_checkbox = gr.Checkbox(label="Invert Alpha Mask",value=False,info="Output alpha as background=white (inverted).",interactive=True)
                         with gr.Row():
                             image_selection_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Start Frame", info="Choose the start frame for target assignment and video matting", visible=False)
                             track_pause_number_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Track end frame", visible=False)
@@ -648,7 +684,7 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
             # video matting
             matting_button.click(
                 fn=video_matting,
-                inputs=[video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size],
+                inputs=[video_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, background_color_dropdown, invert_alpha_checkbox],
                 outputs=[foreground_video_output, alpha_video_output]
             )
 
@@ -748,6 +784,10 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
                                                     info="Dilation on the added mask",
                                                     interactive=True)
                             
+                         with gr.Row():
+                            background_color_dropdown = gr.Dropdown(label="Background Color",choices=["Pure white", "Grey (127,127,127)", "Green screen"],value="Grey (127,127,127)",interactive=True)
+                            invert_alpha_checkbox = gr.Checkbox(label="Invert Alpha Mask",value=False,info="Output alpha as background=white (inverted).",interactive=True)
+
                         with gr.Row():
                             image_selection_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Num of Refinement Iterations", info="More iterations → More details & More time", visible=False)
                             track_pause_number_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Track end frame", visible=False)
@@ -838,7 +878,7 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=my_custom_css) as demo:
             # image matting
             matting_button.click(
                 fn=image_matting,
-                inputs=[image_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, image_selection_slider],
+                inputs=[image_state, interactive_state, mask_dropdown, erode_kernel_size, dilate_kernel_size, image_selection_slider, background_color_dropdown, invert_alpha_checkbox],
                 outputs=[foreground_image_output, alpha_image_output]
             )
 
