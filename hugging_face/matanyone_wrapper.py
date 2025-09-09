@@ -84,7 +84,8 @@ def matanyone(
         com_np = frame_single / 255.0 * pha + bgr * (1.0 - pha)
 
         # Alpha output (invert if requested)
-        pha_out = (1.0 - pha) if invert_alpha else pha
+        # pha_out = (1.0 - pha) if invert_alpha else pha
+        pha_out = pha if invert_alpha else (1.0 - pha)
         
         # DONOT save the warmup frames
         if ti > (n_warmup - 1):
